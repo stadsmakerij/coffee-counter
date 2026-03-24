@@ -14,6 +14,7 @@ MQTT_PORT = 1883
 MQTT_TOPIC = "shellyplusplugs-c82e1806b8a0/status/switch:0"
 LOG_FILE_PATH = 'power_log.csv'
 COUNTER_FILE_PATH = 'coffee_counter.txt'
+MARKER_FILE_PATH = 'coffee_marker.txt'
 
 model = None
 if os.path.exists('coffee_model.pkl'):
@@ -58,10 +59,14 @@ def update_counter_file():
         file.write(str(coffee_count))
     print_log(f"Coffee counter updated to: {coffee_count}")
 
+def is_brewing():
+    return os.path.exists(MARKER_FILE_PATH)
+
 def log_power_data(timestamp, power):
+    label = 'yes' if is_brewing() else 'no'
     with open(LOG_FILE_PATH, 'a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([timestamp, power, 'undefined'])
+        writer.writerow([timestamp, power, label])
 
 def predict_coffee():
     global coffee_count, prediction_buffer, last_detection_time
