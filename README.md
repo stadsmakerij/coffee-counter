@@ -18,12 +18,16 @@ After install, the service runs in data collection mode. It logs power data to `
 
 ### 2. Label coffee brews
 
-When making coffee, mark the brew:
+Start a monitoring session when you're present, then mark brews:
 
 ```bash
-python label_coffee.py on    # start of brew
-python label_coffee.py off   # end of brew
+python label_coffee.py start   # start monitoring session
+python label_coffee.py on      # start of brew
+python label_coffee.py off     # end of brew
+python label_coffee.py stop    # stop monitoring session
 ```
+
+Data logged outside an active session is marked as `unlabeled` and excluded from training. This prevents unattended brews from being incorrectly labeled as `no`.
 
 ### 3. Train the model
 
@@ -40,9 +44,11 @@ This trains the model and restarts the service. Coffee brews are now detected au
 | Command                                         | Description |
 |-------------------------------------------------|---|
 | `bash install.sh`                               | Full install |
-| `python label_coffee.py on`                     | Start labeling a brew |
-| `python label_coffee.py off`                    | Stop labeling |
-| `python label_coffee.py status`                 | Check if labeling is active |
+| `python label_coffee.py start`                  | Start monitoring session |
+| `python label_coffee.py stop`                   | Stop monitoring session |
+| `python label_coffee.py on`                     | Label brew start |
+| `python label_coffee.py off`                    | Label brew end |
+| `python label_coffee.py status`                 | Check session and label status |
 | `bash retrain.sh`                               | Retrain model and restart service |
 | `sudo journalctl -u coffee-counter.service -f`  | View live logs |
 | `sudo systemctl restart coffee-counter.service` | Restart service |

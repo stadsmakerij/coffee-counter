@@ -5,7 +5,7 @@ import joblib
 
 data = pd.read_csv('power_log.csv')
 
-data = data[data['coffee_brewed'] != 'undefined']
+data = data[data['coffee_brewed'].isin(['yes', 'no'])]
 
 data['coffee_brewed'] = data['coffee_brewed'].map({'yes': 1, 'no': 0})
 

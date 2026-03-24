@@ -36,11 +36,19 @@ def print_log(message):
     print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - {message}")
 
 def initialize_log_file():
+    write_header = False
     if not os.path.exists(LOG_FILE_PATH):
-        with open(LOG_FILE_PATH, 'w', newline='') as file:
+        write_header = True
+    else:
+        with open(LOG_FILE_PATH, 'r') as file:
+            first_line = file.readline().strip()
+            if first_line != 'timestamp,power,coffee_brewed':
+                write_header = True
+    if write_header:
+        with open(LOG_FILE_PATH, 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['timestamp', 'power', 'coffee_brewed'])
-        print_log(f"Log file {LOG_FILE_PATH} initialized with headers.")
+        print_log(f"Log file {LOG_FILE_PATH} headers written.")
 
 def initialize_coffee_log():
     global coffee_count
@@ -63,11 +71,21 @@ def log_coffee():
         writer.writerow([timestamp])
     print_log(f"Coffee logged. Total: {coffee_count}")
 
+SESSION_FILE_PATH = 'session_marker.txt'
+
+def is_session_active():
+    return os.path.exists(SESSION_FILE_PATH)
+
 def is_brewing():
     return os.path.exists(MARKER_FILE_PATH)
 
 def log_power_data(timestamp, power):
-    label = 'yes' if is_brewing() else 'no'
+    if not is_session_active():
+        label = 'unlabeled'
+    elif is_brewing():
+        label = 'yes'
+    else:
+        label = 'no'
     with open(LOG_FILE_PATH, 'a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([timestamp, power, label])
