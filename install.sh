@@ -71,27 +71,36 @@ echo "Mosquitto MQTT broker service started successfully."
 
 INSTALL_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+echo "Training model with scikit-learn version on this system..."
+$INSTALL_DIR/coffee-counter/bin/python $INSTALL_DIR/train_model.py
+
+if [ $? -ne 0 ]; then
+    echo "Failed to train model. Exiting..."
+    deactivate
+    exit 1
+fi
+
+echo "Model trained successfully."
+
 echo "Creating systemd service for coffee-counter..."
 SERVICE_FILE="/etc/systemd/system/coffee-counter.service"
-if [ ! -f "$SERVICE_FILE" ]; then
-    sudo bash -c "cat > $SERVICE_FILE" << EOL
+sudo bash -c "cat > $SERVICE_FILE" << EOL
 [Unit]
 Description=Coffee Counter Python Service
-After=network.target
+After=network.target mosquitto.service
 
 [Service]
 Type=simple
 User=$USER
 WorkingDirectory=$INSTALL_DIR
-ExecStart=$INSTALL_DIR/coffee-counter/bin/python $INSTALL_DIR/main.py
+ExecStart=$INSTALL_DIR/coffee-counter/bin/python -u $INSTALL_DIR/main.py
+Environment=PYTHONUNBUFFERED=1
 Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 EOL
-else
-    echo "Service file already exists. Skipping creation."
-fi
 
 echo "Enabling and starting coffee-counter service..."
 sudo systemctl daemon-reload
