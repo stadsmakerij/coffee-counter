@@ -13,7 +13,7 @@ MQTT_BROKER_ADDRESS = "127.0.0.1"
 MQTT_PORT = 1883
 MQTT_TOPIC = "shellyplusplugs-c82e1806b8a0/status/switch:0"
 LOG_FILE_PATH = 'power_log.csv'
-COUNTER_FILE_PATH = 'coffee_counter.txt'
+COFFEE_LOG_PATH = 'coffee_log.csv'
 MARKER_FILE_PATH = 'coffee_marker.txt'
 
 model = None
@@ -42,22 +42,26 @@ def initialize_log_file():
             writer.writerow(['timestamp', 'power', 'coffee_brewed'])
         print_log(f"Log file {LOG_FILE_PATH} initialized with headers.")
 
-def initialize_counter_file():
+def initialize_coffee_log():
     global coffee_count
-    if not os.path.exists(COUNTER_FILE_PATH):
-        with open(COUNTER_FILE_PATH, 'w') as file:
-            file.write('0')
+    if not os.path.exists(COFFEE_LOG_PATH):
+        with open(COFFEE_LOG_PATH, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['timestamp'])
         coffee_count = 0
     else:
-        with open(COUNTER_FILE_PATH, 'r') as file:
-            coffee_count = int(file.read().strip())
-    print_log(f"Coffee counter initialized with count: {coffee_count}")
+        with open(COFFEE_LOG_PATH, 'r') as file:
+            coffee_count = sum(1 for _ in file) - 1
+    print_log(f"Coffee count initialized: {coffee_count}")
 
-def update_counter_file():
+def log_coffee():
     global coffee_count
-    with open(COUNTER_FILE_PATH, 'w') as file:
-        file.write(str(coffee_count))
-    print_log(f"Coffee counter updated to: {coffee_count}")
+    coffee_count += 1
+    timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+    with open(COFFEE_LOG_PATH, 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([timestamp])
+    print_log(f"Coffee logged. Total: {coffee_count}")
 
 def is_brewing():
     return os.path.exists(MARKER_FILE_PATH)
@@ -109,9 +113,7 @@ def predict_coffee():
         if last_detection_time > 0 and (current_time - last_detection_time >= 15):
             mean_probability = np.mean([p[1] for p in prediction_buffer])
             if mean_probability > 0.5:
-                coffee_count += 1
-                print_log("Coffee count increased. Total cups brewed: " + str(coffee_count))
-                update_counter_file()
+                log_coffee()
 
                 last_detection_time = time.time()
                 prediction_buffer = [(last_detection_time, probability)]
@@ -140,7 +142,7 @@ def on_mqtt_message(client, userdata, message):
         print_log("Invalid JSON message received")
 
 initialize_log_file()
-initialize_counter_file()
+initialize_coffee_log()
 
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqtt_client.on_message = on_mqtt_message
