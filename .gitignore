@@ -1,3 +1,5 @@
 .idea
 coffee_marker.txt
 coffee_log.csv
+coffee_model.pkl
+power_log.csv
