@@ -39,18 +39,13 @@ echo "Virtual environment activated."
 
 echo "Upgrading pip and installing necessary Python libraries..."
 pip install --upgrade pip
+pip install -r requirements.txt
 
-required_libraries=("numpy" "pandas" "scikit-learn" "joblib" "paho-mqtt" "scikit-learn" "asyncio" "websockets")
-
-for lib in "${required_libraries[@]}"; do
-    echo "Installing $lib..."
-    pip3 install "$lib"
-    if [ $? -ne 0 ]; then
-        echo "Failed to install $lib. Exiting..."
-        deactivate
-        exit 1
-    fi
-done
+if [ $? -ne 0 ]; then
+    echo "Failed to install Python libraries. Exiting..."
+    deactivate
+    exit 1
+fi
 
 echo "All Python libraries installed successfully."
 
@@ -74,6 +69,8 @@ fi
 
 echo "Mosquitto MQTT broker service started successfully."
 
+INSTALL_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 echo "Creating systemd service for coffee-counter..."
 SERVICE_FILE="/etc/systemd/system/coffee-counter.service"
 if [ ! -f "$SERVICE_FILE" ]; then
@@ -85,8 +82,8 @@ After=network.target
 [Service]
 Type=simple
 User=$USER
-WorkingDirectory=/home/jan
-ExecStart=/home/jan/coffee-counter/bin/python /home/jan/coffee_counter.py
+WorkingDirectory=$INSTALL_DIR
+ExecStart=$INSTALL_DIR/coffee-counter/bin/python $INSTALL_DIR/main.py
 Restart=always
 
 [Install]

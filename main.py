@@ -1,13 +1,13 @@
 import json
 import paho.mqtt.client as mqtt
-from decimal import Decimal
 import time
 import csv
 import os
+import sys
 import joblib
 import numpy as np
 import pandas as pd
-import subprocess
+from collections import deque
 
 MQTT_BROKER_ADDRESS = "127.0.0.1"
 MQTT_PORT = 1883
@@ -15,9 +15,16 @@ MQTT_TOPIC = "shellyplusplugs-c82e1806b8a0/status/switch:0"
 LOG_FILE_PATH = 'power_log.csv'
 COUNTER_FILE_PATH = 'coffee_counter.txt'
 
-model = joblib.load('coffee_model.pkl')
+try:
+    model = joblib.load('coffee_model.pkl')
+except FileNotFoundError:
+    print(f"Error: coffee_model.pkl not found. Run train_model.py first.")
+    sys.exit(1)
+except Exception as e:
+    print(f"Error loading model: {e}")
+    sys.exit(1)
 
-event_buffer = []
+event_buffer = deque(maxlen=15)
 prediction_buffer = []
 
 coffee_count = 0
@@ -49,19 +56,6 @@ def update_counter_file():
     with open(COUNTER_FILE_PATH, 'w') as file:
         file.write(str(coffee_count))
     print_log(f"Coffee counter updated to: {coffee_count}")
-
-    try:
-        subprocess.run(
-            ['bash', 'send_message.sh', f'{{"type":"coffee","body":{coffee_count}}}'],
-            check=True
-        )
-        subprocess.run(
-            ['bash', 'send_message.sh', f'{{"type":"chat","body":"☕️ Kopje koffie gezet"}}'],
-            check=True
-        )
-        print_log("Message sent successfully.")
-    except subprocess.CalledProcessError as e:
-        print_log(f"Failed to send message: {e}")
 
 def log_power_data(timestamp, power):
     with open(LOG_FILE_PATH, 'a', newline='') as file:
@@ -130,8 +124,6 @@ def on_mqtt_message(client, userdata, message):
             log_power_data(timestamp, power)
 
             event_buffer.append(power)
-            if len(event_buffer) > 15:
-                event_buffer.pop(0)
 
             predict_coffee()
 
@@ -141,7 +133,7 @@ def on_mqtt_message(client, userdata, message):
 initialize_log_file()
 initialize_counter_file()
 
-mqtt_client = mqtt.Client()
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqtt_client.on_message = on_mqtt_message
 
 print_log("Connecting to MQTT broker...")
