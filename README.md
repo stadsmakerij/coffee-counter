@@ -49,6 +49,7 @@ This trains the model and restarts the service. Coffee brews are now detected au
 | `python label_coffee.py on`                     | Label brew start |
 | `python label_coffee.py off`                    | Label brew end |
 | `python label_coffee.py status`                 | Check session and label status |
+| `bash reset.sh`                                  | Remove all data, model, and markers |
 | `bash retrain.sh`                               | Retrain model and restart service |
 | `sudo journalctl -u coffee-counter.service -f`  | View live logs |
 | `sudo systemctl restart coffee-counter.service` | Restart service |
