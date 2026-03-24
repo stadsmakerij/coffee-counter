@@ -15,14 +15,15 @@ MQTT_TOPIC = "shellyplusplugs-c82e1806b8a0/status/switch:0"
 LOG_FILE_PATH = 'power_log.csv'
 COUNTER_FILE_PATH = 'coffee_counter.txt'
 
-try:
-    model = joblib.load('coffee_model.pkl')
-except FileNotFoundError:
-    print(f"Error: coffee_model.pkl not found. Run train_model.py first.")
-    sys.exit(1)
-except Exception as e:
-    print(f"Error loading model: {e}")
-    sys.exit(1)
+model = None
+if os.path.exists('coffee_model.pkl'):
+    try:
+        model = joblib.load('coffee_model.pkl')
+        print("Model loaded successfully.")
+    except Exception as e:
+        print(f"Warning: Failed to load model: {e}")
+else:
+    print("No model found. Running in data collection mode only.")
 
 event_buffer = deque(maxlen=15)
 prediction_buffer = []
@@ -64,6 +65,9 @@ def log_power_data(timestamp, power):
 
 def predict_coffee():
     global coffee_count, prediction_buffer, last_detection_time
+
+    if model is None:
+        return
 
     if len(event_buffer) == 15:
         mean_last_15 = np.mean(event_buffer)

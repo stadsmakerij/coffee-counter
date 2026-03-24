@@ -73,16 +73,18 @@ echo "Mosquitto MQTT broker service started successfully."
 
 INSTALL_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-echo "Training model with scikit-learn version on this system..."
-$INSTALL_DIR/coffee-counter/bin/python $INSTALL_DIR/train_model.py
-
-if [ $? -ne 0 ]; then
-    echo "Failed to train model. Exiting..."
-    deactivate
-    exit 1
+if [ -f "$INSTALL_DIR/power_log.csv" ] && grep -q "yes\|no" "$INSTALL_DIR/power_log.csv"; then
+    echo "Training model with labeled data..."
+    $INSTALL_DIR/coffee-counter/bin/python $INSTALL_DIR/train_model.py
+    if [ $? -ne 0 ]; then
+        echo "Warning: Failed to train model. Skipping..."
+    else
+        echo "Model trained successfully."
+    fi
+else
+    echo "No labeled training data found. Skipping model training."
+    echo "Use 'python label_coffee.py on/off' to label data, then run 'python train_model.py'."
 fi
-
-echo "Model trained successfully."
 
 echo "Creating systemd service for coffee-counter..."
 SERVICE_FILE="/etc/systemd/system/coffee-counter.service"
