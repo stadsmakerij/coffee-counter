@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "$(dirname "$0")" || exit 1
+
 echo "Starting installation..."
 
 echo "Updating package list and installing required system packages..."
