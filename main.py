@@ -155,13 +155,8 @@ def predict_coffee():
             if mean_probability > 0.5:
                 log_coffee()
 
-                last_detection_time = time.time()
-                prediction_buffer = [(last_detection_time, probability)]
-                print_log("Timer restarted with current time and last event.")
-            else:
-                print_log("Timer stopped due to insufficient average probability at 15 seconds.")
-                last_detection_time = 0
-                prediction_buffer.clear()
+            last_detection_time = 0
+            prediction_buffer.clear()
 
 def on_mqtt_message(client, userdata, message):
     try:
