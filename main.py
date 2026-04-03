@@ -160,6 +160,7 @@ def predict_coffee():
             if mean_probability > 0.5:
                 log_coffee()
                 cooldown_until = current_time + COOLDOWN_SECONDS
+                event_buffer.clear()
                 print_log(f"Cooldown active for {COOLDOWN_SECONDS} seconds.")
 
             last_detection_time = 0
