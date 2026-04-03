@@ -33,6 +33,8 @@ else:
 event_buffer = deque()
 prediction_buffer = []
 WINDOW_SECONDS = 30
+cooldown_until = 0
+COOLDOWN_SECONDS = 30
 
 coffee_count = 0
 last_detection_time = 0
@@ -107,12 +109,15 @@ def log_power_data(timestamp, power):
         writer.writerow([timestamp, power, label])
 
 def predict_coffee():
-    global coffee_count, prediction_buffer, last_detection_time
+    global coffee_count, prediction_buffer, last_detection_time, cooldown_until
 
     if model is None:
         return
 
     current_time = time.time()
+
+    if current_time < cooldown_until:
+        return
     cutoff_time = current_time - WINDOW_SECONDS
     while event_buffer and event_buffer[0][0] < cutoff_time:
         event_buffer.popleft()
@@ -150,10 +155,12 @@ def predict_coffee():
                     last_detection_time = 0
                     prediction_buffer.clear()
 
-        if last_detection_time > 0 and (current_time - last_detection_time >= 15):
+        if last_detection_time > 0 and (current_time - last_detection_time >= 10):
             mean_probability = np.mean([p[1] for p in prediction_buffer])
             if mean_probability > 0.5:
                 log_coffee()
+                cooldown_until = current_time + COOLDOWN_SECONDS
+                print_log(f"Cooldown active for {COOLDOWN_SECONDS} seconds.")
 
             last_detection_time = 0
             prediction_buffer.clear()
