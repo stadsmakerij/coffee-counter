@@ -11,13 +11,17 @@ data['coffee_brewed'] = data['coffee_brewed'].map({'yes': 1, 'no': 0})
 
 coffee_count = int((data['coffee_brewed'].diff() == 1).sum())
 
-data['mean_last_15'] = data['power'].rolling(window=15).mean()
-data['max_last_15'] = data['power'].rolling(window=15).max()
-data['min_last_15'] = data['power'].rolling(window=15).min()
+data['timestamp'] = pd.to_datetime(data['timestamp'])
+data = data.set_index('timestamp')
+
+data['mean_30s'] = data['power'].rolling('30s').mean()
+data['max_30s'] = data['power'].rolling('30s').max()
+data['min_30s'] = data['power'].rolling('30s').min()
+data['std_30s'] = data['power'].rolling('30s').std().fillna(0)
 
 data = data.dropna()
 
-X = data[['power', 'mean_last_15', 'max_last_15', 'min_last_15']]
+X = data[['power', 'mean_30s', 'max_30s', 'min_30s', 'std_30s']]
 y = data['coffee_brewed']
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)

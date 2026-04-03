@@ -30,8 +30,9 @@ if os.path.exists('coffee_model.pkl'):
 else:
     print("No model found. Running in data collection mode only.")
 
-event_buffer = deque(maxlen=15)
+event_buffer = deque()
 prediction_buffer = []
+WINDOW_SECONDS = 30
 
 coffee_count = 0
 last_detection_time = 0
@@ -111,18 +112,24 @@ def predict_coffee():
     if model is None:
         return
 
-    if len(event_buffer) == 15:
-        mean_last_15 = np.mean(event_buffer)
-        max_last_15 = np.max(event_buffer)
-        min_last_15 = np.min(event_buffer)
+    current_time = time.time()
+    cutoff_time = current_time - WINDOW_SECONDS
+    while event_buffer and event_buffer[0][0] < cutoff_time:
+        event_buffer.popleft()
 
-        X = pd.DataFrame([[event_buffer[-1], mean_last_15, max_last_15, min_last_15]],
-                         columns=['power', 'mean_last_15', 'max_last_15', 'min_last_15'])
+    if len(event_buffer) >= 2:
+        powers = [p for _, p in event_buffer]
+        mean_30s = np.mean(powers)
+        max_30s = np.max(powers)
+        min_30s = np.min(powers)
+        std_30s = np.std(powers, ddof=1) if len(powers) > 1 else 0.0
+
+        X = pd.DataFrame([[powers[-1], mean_30s, max_30s, min_30s, std_30s]],
+                         columns=['power', 'mean_30s', 'max_30s', 'min_30s', 'std_30s'])
 
         prediction = model.predict(X)
         probability = model.predict_proba(X)[:, 1].mean()
 
-        current_time = time.time()
         if probability > 0.5:
             print_log(f"Predicted: Coffee is being brewed with probability {probability:.2f}")
             if last_detection_time == 0:
@@ -167,7 +174,7 @@ def on_mqtt_message(client, userdata, message):
 
             log_power_data(timestamp, power)
 
-            event_buffer.append(power)
+            event_buffer.append((time.time(), power))
 
             predict_coffee()
 
