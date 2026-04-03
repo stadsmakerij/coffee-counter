@@ -57,3 +57,28 @@ This trains the model and restarts the service. Coffee brews are now detected au
 ## Configuration
 
 The Shelly Plug must be configured to send MQTT data to the Pi's IP on port `1883`. The MQTT topic is set in `main.py`.
+
+### Metrics API
+
+Coffee detections can be sent to an external API. Configure this via environment variables in the systemd service file (`/etc/systemd/system/coffee-counter.service`):
+
+| Variable | Description |
+|---|---|
+| `METRICS_API_ENABLED` | Set to `true` to enable (default: `false`) |
+| `METRICS_API_URL` | API endpoint URL |
+| `METRICS_API_TOKEN` | Bearer token for authentication |
+
+Example:
+
+```
+Environment=METRICS_API_ENABLED=true
+Environment=METRICS_API_URL=https://example.com/api/metrics
+Environment=METRICS_API_TOKEN=your-token-here
+```
+
+After changing, reload and restart:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart coffee-counter.service
+```

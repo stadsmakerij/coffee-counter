@@ -99,6 +99,9 @@ User=$USER
 WorkingDirectory=$INSTALL_DIR
 ExecStart=$INSTALL_DIR/coffee-counter/bin/python -u $INSTALL_DIR/main.py
 Environment=PYTHONUNBUFFERED=1
+Environment=METRICS_API_ENABLED=${METRICS_API_ENABLED:-false}
+Environment=METRICS_API_URL=${METRICS_API_URL:-}
+Environment=METRICS_API_TOKEN=${METRICS_API_TOKEN:-}
 Restart=always
 RestartSec=5
 

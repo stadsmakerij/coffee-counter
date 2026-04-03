@@ -8,6 +8,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from collections import deque
+import requests
 
 MQTT_BROKER_ADDRESS = "127.0.0.1"
 MQTT_PORT = 1883
@@ -15,6 +16,9 @@ MQTT_TOPIC = "shellyplusplugs-c82e1806b8a0/status/switch:0"
 LOG_FILE_PATH = 'power_log.csv'
 COFFEE_LOG_PATH = 'coffee_log.csv'
 MARKER_FILE_PATH = 'coffee_marker.txt'
+METRICS_API_ENABLED = os.environ.get('METRICS_API_ENABLED', 'false').lower() == 'true'
+METRICS_API_URL = os.environ.get('METRICS_API_URL', '')
+METRICS_API_TOKEN = os.environ.get('METRICS_API_TOKEN', '')
 
 model = None
 if os.path.exists('coffee_model.pkl'):
@@ -70,6 +74,17 @@ def log_coffee():
         writer = csv.writer(file)
         writer.writerow([timestamp])
     print_log(f"Coffee logged. Total: {coffee_count}")
+    send_metric('coffee', coffee_count)
+
+def send_metric(name, value):
+    if not METRICS_API_ENABLED:
+        return
+    try:
+        requests.post(METRICS_API_URL, json={'name': name, 'value': value},
+                       headers={'Authorization': f'Bearer {METRICS_API_TOKEN}'}, timeout=5)
+        print_log(f"Metric sent: {name}={value}")
+    except Exception as e:
+        print_log(f"Failed to send metric: {e}")
 
 SESSION_FILE_PATH = 'session_marker.txt'
 
