@@ -1,4 +1,4 @@
-# Coffee Counter — Koffieteller
+# Coffee Counter (Koffieteller)
 
 Draait op een Raspberry Pi en telt het aantal gezette kopjes koffie door het stroomverbruik van een Shelly Plug te monitoren via MQTT. Gebruikt een machine learning model dat getraind is op gelabelde stroomverbruikdata.
 
