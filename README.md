@@ -2,6 +2,15 @@
 
 Draait op een Raspberry Pi en telt het aantal gezette kopjes koffie door het stroomverbruik van een Shelly Plug te monitoren via MQTT. Gebruikt een machine learning model dat getraind is op gelabelde stroomverbruikdata.
 
+- [Installatie](#installatie)
+- [Gebruik](#gebruik)
+  - [1. Data verzamelen](#1-data-verzamelen)
+  - [2. Koffiezetbeurten labelen](#2-koffiezetbeurten-labelen)
+  - [3. Model trainen](#3-model-trainen)
+- [Commando's](#commandos)
+- [Configuratie](#configuratie)
+  - [Metrics API](#metrics-api)
+
 ## Installatie
 
 ```bash
