@@ -1,74 +1,74 @@
-# Coffee counter
+# Coffee Counter — Koffieteller
 
-Raspberry Pi script that detects coffee brews by monitoring power consumption from a Shelly Plug via MQTT. Uses a machine learning model trained on labeled power data.
+Draait op een Raspberry Pi en telt het aantal gezette kopjes koffie door het stroomverbruik van een Shelly Plug te monitoren via MQTT. Gebruikt een machine learning model dat getraind is op gelabelde stroomverbruikdata.
 
-## Install
+## Installatie
 
 ```bash
 bash install.sh
 ```
 
-This sets up the virtual environment, installs dependencies, configures Mosquitto MQTT broker, and creates a systemd service.
+Dit zet de virtual environment op, installeert dependencies, configureert de Mosquitto MQTT broker en maakt een systemd service aan.
 
-## Usage
+## Gebruik
 
-### 1. Collect data
+### 1. Data verzamelen
 
-After install, the service runs in data collection mode. It logs power data to `power_log.csv`.
+Na de installatie draait de service in dataverzamelmodus. Stroomdata wordt gelogd naar `power_log.csv`.
 
-### 2. Label coffee brews
+### 2. Koffiezetbeurten labelen
 
-Start a monitoring session when you're present, then mark brews:
+Start een sessie als je erbij bent en markeer de zetbeurten:
 
 ```bash
-python label_coffee.py start   # start monitoring session
-python label_coffee.py on      # start of brew
-python label_coffee.py off     # end of brew
-python label_coffee.py stop    # stop monitoring session
+python label_coffee.py start   # sessie starten
+python label_coffee.py on      # begin van een zetbeurt
+python label_coffee.py off     # einde van een zetbeurt
+python label_coffee.py stop    # sessie stoppen
 ```
 
-Data logged outside an active session is marked as `unlabeled` and excluded from training. This prevents unattended brews from being incorrectly labeled as `no`.
+Data die buiten een actieve sessie wordt gelogd krijgt het label `unlabeled` en wordt niet meegenomen in de training. Zo worden onbewaakte zetbeurten niet per ongeluk als `no` gelabeld.
 
-### 3. Train the model
+### 3. Model trainen
 
-After labeling ~10-20 brews:
+Na het labelen van ~10-20 zetbeurten:
 
 ```bash
 bash retrain.sh
 ```
 
-This trains the model and restarts the service. Coffee brews are now detected automatically and logged to `coffee_log.csv`.
+Dit traint het model en herstart de service. Koffiezetbeurten worden nu automatisch gedetecteerd en gelogd in `coffee_log.csv`.
 
-## Commands
+## Commando's
 
-| Command                                         | Description |
+| Commando                                        | Omschrijving |
 |-------------------------------------------------|---|
-| `bash install.sh`                               | Full install |
-| `python label_coffee.py start`                  | Start monitoring session |
-| `python label_coffee.py stop`                   | Stop monitoring session |
-| `python label_coffee.py on`                     | Label brew start |
-| `python label_coffee.py off`                    | Label brew end |
-| `python label_coffee.py status`                 | Check session and label status |
-| `bash reset.sh`                                  | Remove all data, model, and markers |
-| `bash retrain.sh`                               | Retrain model and restart service |
-| `sudo journalctl -u coffee-counter.service -f`  | View live logs |
-| `sudo systemctl restart coffee-counter.service` | Restart service |
+| `bash install.sh`                               | Volledige installatie |
+| `python label_coffee.py start`                  | Sessie starten |
+| `python label_coffee.py stop`                   | Sessie stoppen |
+| `python label_coffee.py on`                     | Begin zetbeurt labelen |
+| `python label_coffee.py off`                    | Einde zetbeurt labelen |
+| `python label_coffee.py status`                 | Sessie- en labelstatus bekijken |
+| `bash reset.sh`                                  | Alle data, model en markers verwijderen |
+| `bash retrain.sh`                               | Model opnieuw trainen en service herstarten |
+| `sudo journalctl -u coffee-counter.service -f`  | Live logs bekijken |
+| `sudo systemctl restart coffee-counter.service` | Service herstarten |
 
-## Configuration
+## Configuratie
 
-The Shelly Plug must be configured to send MQTT data to the Pi's IP on port `1883`. The MQTT topic is set in `main.py`.
+De Shelly Plug moet geconfigureerd zijn om MQTT-data te sturen naar het IP van de Pi op poort `1883`. Het MQTT-topic wordt ingesteld in `main.py`.
 
 ### Metrics API
 
-Coffee detections can be sent to an external API. Configure this via environment variables in the systemd service file (`/etc/systemd/system/coffee-counter.service`):
+Koffiedetecties kunnen naar een externe API gestuurd worden. Configureer dit via environment variables in het systemd service-bestand (`/etc/systemd/system/coffee-counter.service`):
 
-| Variable | Description |
+| Variabele | Omschrijving |
 |---|---|
-| `METRICS_API_ENABLED` | Set to `true` to enable (default: `false`) |
-| `METRICS_API_URL` | API endpoint URL |
-| `METRICS_API_TOKEN` | Bearer token for authentication |
+| `METRICS_API_ENABLED` | Zet op `true` om in te schakelen (standaard: `false`) |
+| `METRICS_API_URL` | URL van het API-endpoint |
+| `METRICS_API_TOKEN` | Bearer token voor authenticatie |
 
-Example:
+Voorbeeld:
 
 ```
 Environment=METRICS_API_ENABLED=true
@@ -76,7 +76,7 @@ Environment=METRICS_API_URL=https://example.com/api/metrics
 Environment=METRICS_API_TOKEN=your-token-here
 ```
 
-After changing, reload and restart:
+Na het aanpassen, herladen en herstarten:
 
 ```bash
 sudo systemctl daemon-reload
